@@ -8,7 +8,7 @@ int main()
 
 	std::cin >> m;
 
-	std::cout<< "Determinant: " <<  m.det() << std::endl;
+	std::cout<< "Determinant: " <<  m.det() <<  std::endl;
 	
 	return 0;
 }

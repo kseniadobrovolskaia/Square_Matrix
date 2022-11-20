@@ -179,44 +179,40 @@ T Matrix<T>::det()
 
 	for (int k = 0; k < n_t - 1; k++)
 	{
+		if (k != 0)
+		{
+			znam = M[k-1][k-1];
+		}
+
+		if (Matrix<T>::is_zero(znam))
+		{
+			sign = -sign;
+			int n = k;
+
+			while (Matrix<T>::is_zero(M[n][k-1]))
+			{
+				n++;
+				if (n == n_t)
+				{
+					return 0;
+				}
+				}
+				M.swap_rows(n, k-1, 0);
+				znam = M[k-1][k-1];
+					
+		}
+
 		for (int i = k + 1; i < n_t; i++)
 		{
 			for (int j = k + 1; j < n_t; j++)
 			{
-				if (Matrix<T>::is_zero(znam))
-				{
-					sign++;
-					int n = k;
-
-					while (Matrix<T>::is_zero(M[n][k]))
-					{
-						if (n-1 == n_t)
-						{
-							return 0;
-						}
-						n++;
-					}
-					M.swap_rows(n, k-1, 0);
-					
-				}
-				
-				if (k != 0)
-				{
-					znam = M[k-1][k-1];
-				}
-
 				M[i][j] = (M[i][j]*M[k][k] - M[i][k]*M[k][j]) / znam;
 				
 			}
 		}
 	}
 
-	if (sign % 2 == 0)
-	{
-		return -M[n_t - 1][n_t - 1];
-	}
-
-	return M[n_t - 1][n_t - 1];
+	return M[n_t - 1][n_t - 1] * sign;
 }
 
 
@@ -244,9 +240,9 @@ void Matrix<T>::swap_rows(int n, int k, int first_col)
 
 	for (int col = first_col; col < n_t; col++)
 	{
-		elem = matrix[n][col];
-		matrix[n][col] = matrix[k][col];
-		matrix[k][col] = elem;
+		elem = (*this)[n][col];
+		(*this)[n][col] = (*this)[k][col];
+		(*this)[k][col] = elem;
 	}
 }
 
@@ -520,5 +516,4 @@ Matrix<T> & operator*=(U elem, const Matrix<T> & mt)
 
 
 #endif
-
 
