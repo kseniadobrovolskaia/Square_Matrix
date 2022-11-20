@@ -4,7 +4,7 @@
 int main()
 {
 	
-	Matrix<int> m;
+	Matrix<double> m;
 
 	std::cin >> m;
 
