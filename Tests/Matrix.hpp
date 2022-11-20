@@ -184,21 +184,20 @@ T Matrix<T>::det()
 			znam = M[k-1][k-1];
 		}
 
-		if (Matrix<T>::is_zero(znam))
+		if (Matrix<T>::is_zero(M[k][k]))
 		{
 			sign = -sign;
 			int n = k;
 
-			while (Matrix<T>::is_zero(M[n][k-1]))
+			while (Matrix<T>::is_zero(M[n][k]))
 			{
 				n++;
 				if (n == n_t)
 				{
 					return 0;
 				}
-				}
-				M.swap_rows(n, k-1, 0);
-				znam = M[k-1][k-1];
+			}
+			M.swap_rows(n, k, 0);
 					
 		}
 
