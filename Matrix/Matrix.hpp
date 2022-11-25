@@ -5,6 +5,11 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <cstdlib>
+#include <new>
+#include <stdexcept>
+#include <exception>
+#include <string>
 
 
 #define ACCURACY 1e-5
@@ -26,20 +31,21 @@ class Matrix
 	struct Row
 	{
 		T *row;
-		T operator[](int n) const{ return row[n];}
-		T & operator[](int n) { return row[n];}
+		T operator[](int n) const { return row[n]; }
+		T & operator[](int n) { return row[n]; }
 	};
 	struct Row* matrix;
 	
 
 public:
-	Matrix(int n = 2);
+
+	explicit Matrix(int n = 2);
 	Matrix(const Matrix<T> & mt);
 	Matrix<T> & operator=(const Matrix<T> & mt);
 	~Matrix();
 
-	Row operator[](int n) const { return matrix[n];}
-	Row & operator[](int n) { return matrix[n];}
+	Row operator[](int n) const { return matrix[n]; }
+	Row & operator[](int n) { return matrix[n]; }
 
 	int get_n() const { return n_t;};
 	T det();
@@ -54,7 +60,7 @@ public:
 	Matrix<T> operator-() const;
 	Matrix<T> operator*(const Matrix<T> & mt) const;
 	Matrix<T> & operator*=(const Matrix<T> & mt);
-	bool operator==(const Matrix<T> & mt);
+	bool operator==(const Matrix<T> & mt) const;
 
 
 	template<typename U>
@@ -69,13 +75,37 @@ public:
 };
 
 
+//-----------------------------------Matrix-------------------------------------
+
+
 template<typename T>
 Matrix<T>::Matrix(int n): n_t(n)
 {
-	matrix = new struct Row[n];
-	for (int i = 0; i < n; i++)
+	int use_mem = 0;
+	
+	try
 	{
-		matrix[i].row = new T[n];
+		matrix = new struct Row[n];
+
+		for (int i = 0; i < n; i++)
+		{
+			matrix[i].row = new T[n];
+			use_mem++;
+		}
+	}
+	catch(...)
+	{
+		for (int i = 0; i < use_mem; i++)
+		{
+			delete [] matrix[i].row;
+		}
+
+		if (use_mem > 0)
+		{
+			delete [] matrix;
+		}
+
+		throw;
 	}
 }
 
@@ -96,17 +126,51 @@ template<typename T>
 Matrix<T>::Matrix(const Matrix<T> & mt)
 {	
 	n_t = mt.n_t;
-	matrix = new struct Row[n_t];
+	int use_mem = 0;
+	
+	try
+	{
+		matrix = new struct Row[n_t];
+
+		for (int i = 0; i < n_t; i++)
+		{
+			matrix[i].row = new T[n_t];
+			use_mem++;
+		}
+	}
+	catch(...)
+	{
+		for (int i = 0; i < use_mem; i++)
+		{
+			delete [] matrix[i].row;
+		}
+
+		if (use_mem > 0)
+		{
+			delete [] matrix;
+		}
+
+		throw;
+	}
+
+	Matrix<T> m_tmp(n_t);
 
 	for (int i = 0; i < n_t; i++)
 	{
-		matrix[i].row = new T[n_t];
-
 		for (int j = 0; j < n_t; j++)
 		{
-			matrix[i].row[j] = mt.matrix[i].row[j];
+			m_tmp[i][j] = mt[i][j];
 		}
 	}
+
+	for (int i = 0; i < n_t; i++)
+	{
+		for (int j = 0; j < n_t; j++)
+		{
+			(*this)[i][j] = m_tmp[i][j];
+		}
+	}
+
 }
 
 
@@ -118,23 +182,40 @@ Matrix<T> & Matrix<T>::operator=(const Matrix<T> & mt)
 		return *this;
 	}
 
-	for (int i = 0; i < n_t; i++)
-	{
-		delete [] matrix[i].row;
-	}
-	delete [] matrix;
-
+	int use_mem = 0;
 	n_t = mt.n_t;
+	try
+	{
+		matrix = new struct Row[n_t];
 
-	matrix = new struct Row[n_t];
+		for (int i = 0; i < n_t; i++)
+		{
+			matrix[i].row = new T[n_t];
+			use_mem++;
+		}
+	}
+	catch(...)
+	{
+		for (int i = 0; i < use_mem; i++)
+		{
+			delete [] matrix[i].row;
+		}
+
+		if (use_mem > 0)
+		{
+			delete [] matrix;
+		}
+
+		throw;
+	}
+
+	Matrix<T> m_tmp(mt);
 
 	for (int i = 0; i < n_t; i++)
 	{
-		matrix[i].row = new T[n_t];
-
 		for (int j = 0; j < n_t; j++)
 		{
-			matrix[i].row[j] = mt.matrix[i].row[j];
+			(*this)[i][j] = m_tmp[i][j];
 		}
 	}
 
@@ -143,7 +224,7 @@ Matrix<T> & Matrix<T>::operator=(const Matrix<T> & mt)
 
 
 template<typename T>
-bool Matrix<T>::operator==(const Matrix<T> & mt)
+bool Matrix<T>::operator==(const Matrix<T> & mt) const
 {
 	if (n_t != mt.n_t)
 	{
@@ -154,7 +235,7 @@ bool Matrix<T>::operator==(const Matrix<T> & mt)
 	{
 		for (int j = 0; j < n_t; j++)
 		{
-			if (matrix[i].row[j] != mt.matrix[i].row[j])
+			if ((*this)[i][j] != mt[i][j])
 			{
 				return 0;
 			}
@@ -256,8 +337,7 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T> & mt) const
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator +" << std::endl;
-		return result;
+		throw std::logic_error("Incorrect size for operator +");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -278,8 +358,7 @@ Matrix<T> & Matrix<T>::operator+=(const Matrix<T> & mt)
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator +=" << std::endl;
-		return *this;
+		throw std::logic_error("Incorrect size for operator +=");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -301,8 +380,7 @@ Matrix<T> Matrix<T>::operator-(const Matrix<T> & mt) const
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator -" << std::endl;
-		return result;
+		throw std::logic_error("Incorrect size for operator -");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -323,8 +401,7 @@ Matrix<T> & Matrix<T>::operator-=(const Matrix<T> & mt)
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator -=" << std::endl;
-		return *this;
+		throw std::logic_error("Incorrect size for operator -=");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -363,8 +440,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & mt) const
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator *" << std::endl;
-		return result;
+		throw std::logic_error("Incorrect size for operator *");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -389,8 +465,7 @@ Matrix<T> & Matrix<T>::operator*=(const Matrix<T> & mt)
 
 	if (n_t != mt.get_n())
 	{
-		std::cout << "Incorrect size for operator *=" << std::endl;
-		return *this;
+		throw std::logic_error("Incorrect size for operator *=");
 	}
 
 	for (int i = 0; i < n_t; i++)
@@ -458,9 +533,7 @@ std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 
 	if (n < 0)
 	{
-		std::cout << "Wrong matrix size" << std::endl;
-		mt = Matrix<T>(0);
-		return istr;
+		throw std::logic_error("Wrong matrix size");
 	}
 
 	mt = Matrix<T>(n);
