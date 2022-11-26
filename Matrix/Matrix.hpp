@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <exception>
 #include <string>
+#include <algorithm>
 
 
 #define ACCURACY 1e-5
@@ -157,18 +158,14 @@ Matrix<T>::Matrix(const Matrix<T> & mt)
 
 	for (int i = 0; i < n_t; i++)
 	{
-		for (int j = 0; j < n_t; j++)
-		{
-			m_tmp[i][j] = mt[i][j];
-		}
+		std::copy( m_tmp.matrix[i].row,  m_tmp.matrix[i].row + n_t, mt.matrix[i].row);
 	}
+
+	//std::swap(*this, m_tmp);
 
 	for (int i = 0; i < n_t; i++)
 	{
-		for (int j = 0; j < n_t; j++)
-		{
-			(*this)[i][j] = m_tmp[i][j];
-		}
+		std::copy(matrix[i].row, matrix[i].row + n_t, m_tmp.matrix[i].row);
 	}
 
 }
@@ -213,10 +210,7 @@ Matrix<T> & Matrix<T>::operator=(const Matrix<T> & mt)
 
 	for (int i = 0; i < n_t; i++)
 	{
-		for (int j = 0; j < n_t; j++)
-		{
-			(*this)[i][j] = m_tmp[i][j];
-		}
+		std::copy(matrix[i].row, matrix[i].row + n_t, mt.matrix[i].row);
 	}
 
 	return *this;
@@ -228,18 +222,15 @@ bool Matrix<T>::operator==(const Matrix<T> & mt) const
 {
 	if (n_t != mt.n_t)
 	{
-		return 0;
+		throw std::logic_error("Сomparison of matrices of different sizes is undefined");
 	}
-
+ 	
 	for (int i = 0; i < n_t; i++)
 	{
-		for (int j = 0; j < n_t; j++)
-		{
-			if ((*this)[i][j] != mt[i][j])
-			{
-				return 0;
-			}
-		}
+		if (!std::equal(matrix[i].row, matrix[i].row + n_t, mt.matrix[i].row, mt.matrix[i].row + n_t))
+        {
+            return 0;
+        }
 	}
 
 	return 1;
@@ -585,6 +576,8 @@ Matrix<T> & operator*=(U elem, const Matrix<T> & mt)
 {
 	return mt *= elem;
 }
+
+
 
 
 #endif
