@@ -27,7 +27,6 @@ template<typename T> std::istream & operator>>(std::istream & istr, Matrix<T> & 
 template<typename T>
 class Matrix
 {
-
 	int n_t;
 	struct Row
 	{
@@ -40,7 +39,7 @@ class Matrix
 
 public:
 
-	explicit Matrix(int n = 2);
+	explicit Matrix(int n = 0);
 	Matrix(const Matrix<T> & mt);
 	Matrix<T> & operator=(const Matrix<T> & mt);
 	~Matrix();
@@ -49,18 +48,16 @@ public:
 	Row & operator[](int n) { return matrix[n]; }
 
 	int get_n() const { return n_t;};
-	T det();
+	T det() const;
 	Matrix<T> & trans();
-	bool is_zero(const T elem) const {return (elem > -ACCURACY) && (elem < ACCURACY);}
-	void swap_rows(int n, int k, int first_col);
+	Matrix<T> & zero();
+	void swap_rows(int n, int k);
 	
-	Matrix<T> operator+(const Matrix<T> & mt) const;
+
 	Matrix<T> & operator+=(const Matrix<T> & mt);
-	Matrix<T> operator-(const Matrix<T> & mt) const;
 	Matrix<T> & operator-=(const Matrix<T> & mt);
-	Matrix<T> operator-() const;
-	Matrix<T> operator*(const Matrix<T> & mt) const;
 	Matrix<T> & operator*=(const Matrix<T> & mt);
+	void swap(Matrix<T> & mt);
 	bool operator==(const Matrix<T> & mt) const;
 
 
@@ -76,12 +73,24 @@ public:
 };
 
 
-//-----------------------------------Matrix-------------------------------------
+template<typename T>
+bool is_zero(const T elem)
+{
+	return (elem > -ACCURACY) && (elem < ACCURACY);
+}
+
+
+//-----------------------------------Matrix----------------------------------------
 
 
 template<typename T>
 Matrix<T>::Matrix(int n): n_t(n)
 {
+	if (n < 0)
+	{
+		throw std::logic_error("Wrong matrix size");
+	}
+
 	int use_mem = 0;
 	
 	try
@@ -128,9 +137,16 @@ Matrix<T>::Matrix(const Matrix<T> & mt)
 {	
 	n_t = mt.n_t;
 	int use_mem = 0;
-	
+
+	Matrix<T> m_tmp(n_t);
+
 	try
 	{
+		for (int i = 0; i < n_t; i++)
+		{
+			std::copy( mt.matrix[i].row,  mt.matrix[i].row + n_t, m_tmp.matrix[i].row);
+		}
+
 		matrix = new struct Row[n_t];
 
 		for (int i = 0; i < n_t; i++)
@@ -154,64 +170,24 @@ Matrix<T>::Matrix(const Matrix<T> & mt)
 		throw;
 	}
 
-	Matrix<T> m_tmp(n_t);
-
 	for (int i = 0; i < n_t; i++)
 	{
-		std::copy( m_tmp.matrix[i].row,  m_tmp.matrix[i].row + n_t, mt.matrix[i].row);
+		std::copy(m_tmp.matrix[i].row, m_tmp.matrix[i].row + n_t, matrix[i].row);
 	}
-
-	//std::swap(*this, m_tmp);
-
-	for (int i = 0; i < n_t; i++)
-	{
-		std::copy(matrix[i].row, matrix[i].row + n_t, m_tmp.matrix[i].row);
-	}
-
 }
 
 
 template<typename T>
 Matrix<T> & Matrix<T>::operator=(const Matrix<T> & mt)
 {
-	if (*this == mt)
+	if (n_t != mt.n_t)
 	{
-		return *this;
-	}
-
-	int use_mem = 0;
-	n_t = mt.n_t;
-	try
-	{
-		matrix = new struct Row[n_t];
-
-		for (int i = 0; i < n_t; i++)
-		{
-			matrix[i].row = new T[n_t];
-			use_mem++;
-		}
-	}
-	catch(...)
-	{
-		for (int i = 0; i < use_mem; i++)
-		{
-			delete [] matrix[i].row;
-		}
-
-		if (use_mem > 0)
-		{
-			delete [] matrix;
-		}
-
-		throw;
+		throw std::logic_error("You cannot use operator = for matrices of different sizes");
 	}
 
 	Matrix<T> m_tmp(mt);
 
-	for (int i = 0; i < n_t; i++)
-	{
-		std::copy(matrix[i].row, matrix[i].row + n_t, mt.matrix[i].row);
-	}
+	swap(m_tmp);
 
 	return *this;
 }
@@ -238,7 +214,22 @@ bool Matrix<T>::operator==(const Matrix<T> & mt) const
 
 
 template<typename T>
-T Matrix<T>::det()
+void Matrix<T>::swap(Matrix<T> & mt)
+{
+	if (n_t != mt.n_t)
+	{
+		throw std::logic_error("You cannot swap matrices of different sizes");
+	}
+
+	for (int i = 0; i < n_t; i++)
+	{
+		std::swap(matrix[i].row, mt.matrix[i].row);
+	}
+}
+
+
+template<typename T>
+T Matrix<T>::det() const
 {
 	Matrix<T> M = *this;
 	int sign = 1;
@@ -256,12 +247,12 @@ T Matrix<T>::det()
 			znam = M[k-1][k-1];
 		}
 
-		if (Matrix<T>::is_zero(M[k][k]))
+		if (is_zero(M[k][k]))
 		{
 			sign = -sign;
 			int n = k;
 
-			while (Matrix<T>::is_zero(M[n][k]))
+			while (is_zero(M[n][k]))
 			{
 				n++;
 				if (n == n_t)
@@ -269,7 +260,7 @@ T Matrix<T>::det()
 					return 0;
 				}
 			}
-			M.swap_rows(n, k, 0);
+			M.swap_rows(n, k);
 					
 		}
 
@@ -284,6 +275,20 @@ T Matrix<T>::det()
 	}
 
 	return M[n_t - 1][n_t - 1] * sign;
+}
+
+
+template<typename T>
+Matrix<T> & Matrix<T>::zero()
+{
+	T zero[n_t] = {0};
+
+	for (int i = 0; i < n_t; i++)
+	{
+		std::copy(zero, zero + n_t, matrix[i].row);
+	}
+
+	return *this;
 }
 
 
@@ -305,134 +310,59 @@ Matrix<T> & Matrix<T>::trans()
 
 
 template<typename T>
-void Matrix<T>::swap_rows(int n, int k, int first_col)
+void Matrix<T>::swap_rows(int n, int k)
 {
-	T elem;
-
-	for (int col = first_col; col < n_t; col++)
-	{
-		elem = (*this)[n][col];
-		(*this)[n][col] = (*this)[k][col];
-		(*this)[k][col] = elem;
-	}
+	std::swap(matrix[n].row, matrix[k].row);
 }
 
 
-//----------------------------------Operators---------------------------
-
-
-template<typename T>
-Matrix<T> Matrix<T>::operator+(const Matrix<T> & mt) const
-{
-	Matrix<T> result(n_t);
-
-	if (n_t != mt.get_n())
-	{
-		throw std::logic_error("Incorrect size for operator +");
-	}
-
-	for (int i = 0; i < n_t; i++)
-	{
-		for (int j = 0; j < n_t; j++) 
-    	{
-        	result[i][j] = matrix[i][j] + mt[i][j];
-    	}
-	}
-
-	return result;
-}
-
+//---------------------------Operators in the class----------------------------------
 
 template<typename T>
 Matrix<T> & Matrix<T>::operator+=(const Matrix<T> & mt)
 {
-
-	if (n_t != mt.get_n())
+	if (n_t != mt.n_t)
 	{
 		throw std::logic_error("Incorrect size for operator +=");
 	}
 
-	for (int i = 0; i < n_t; i++)
-	{
-		for (int j = 0; j < n_t; j++) 
-    	{
-        	matrix[i][j] += mt[i][j];
-    	}
-	}
-
-	return *this;
-}
-
-
-template<typename T>
-Matrix<T> Matrix<T>::operator-(const Matrix<T> & mt) const
-{
-	Matrix<T> result(n_t);
-
-	if (n_t != mt.get_n())
-	{
-		throw std::logic_error("Incorrect size for operator -");
-	}
+	Matrix<T> m_tmp((*this));
 
 	for (int i = 0; i < n_t; i++)
 	{
 		for (int j = 0; j < n_t; j++) 
     	{
-        	result[i][j] = matrix[i][j] - mt[i][j];
+        	m_tmp[i][j] += mt[i][j];
     	}
 	}
 
-	return result;
+	return *this = m_tmp;
 }
 
 
 template<typename T>
 Matrix<T> & Matrix<T>::operator-=(const Matrix<T> & mt)
 {
-
-	if (n_t != mt.get_n())
+	if (n_t != mt.n_t)
 	{
 		throw std::logic_error("Incorrect size for operator -=");
 	}
 
-	for (int i = 0; i < n_t; i++)
-	{
-		for (int j = 0; j < n_t; j++) 
-    	{
-        	matrix[i][j] -= mt[i][j];
-    	}
-	}
-
-	return *this;
+	return *this += (-mt);
 }
 
 
 template<typename T>
-Matrix<T> Matrix<T>::operator-() const
+Matrix<T> & Matrix<T>::operator*=(const Matrix<T> & mt)
 {
-	Matrix<T> result(n_t);
-
-	for (int i = 0; i < n_t; i++)
-	{
-		for (int j = 0; j < n_t; j++) 
-    	{
-        	result[i][j] = -matrix[i][j];
-    	}
-	}
-
-	return result;
-}
-
-
-template<typename T>
-Matrix<T> Matrix<T>::operator*(const Matrix<T> & mt) const
-{
-	Matrix<T> result(n_t);
-
 	if (n_t != mt.get_n())
 	{
-		throw std::logic_error("Incorrect size for operator *");
+		throw std::logic_error("Incorrect size for operator *=");
 	}
+
+	Matrix<T> result(n_t);
+
+	result.zero();
 
 	for (int i = 0; i < n_t; i++)
 	{
@@ -445,52 +375,19 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> & mt) const
     	}
 	}
 
-	return result;
+	return *this = result;
 }
 
 
-template<typename T>
-Matrix<T> & Matrix<T>::operator*=(const Matrix<T> & mt)
-{
-	*this = Matrix<T>(n_t);
-
-	if (n_t != mt.get_n())
-	{
-		throw std::logic_error("Incorrect size for operator *=");
-	}
-
-	for (int i = 0; i < n_t; i++)
-	{
-		for (int j = 0; j < n_t; j++) 
-    	{
-    		for (int k = 0; k < n_t; k++)
-    		{
-    			(*this)[i][j] += ((*this)[i][k] * mt[k][j]);
-    		}
-    	}
-	}
-
-	return *this;
-}
-
-
-//-----------------------------Template methods----------------------
+//-----------------------------Template methods----------------------------------
 
 template<typename T>
 	template<typename U>
 	Matrix<T> Matrix<T>::operator*(U elem) const
 	{
-		Matrix<T> result(n_t);
+		Matrix<T> result((*this));
 
-		for (int i = 0; i < n_t; i++)
-		{
-			for (int j = 0; j < n_t; j++) 
-	    	{
-	        	result[i][j] = matrix[i][j] * elem;
-	    	}
-		}
-
-		return result;
+		return result *= elem;
 	}
 
 
@@ -499,7 +396,6 @@ template<typename T>
 	template<typename U>
 	Matrix<T> & Matrix<T>::operator*=(U elem)
 	{
-
 		for (int i = 0; i < n_t; i++)
 		{
 			for (int j = 0; j < n_t; j++) 
@@ -512,6 +408,80 @@ template<typename T>
 	}
 
 
+
+//---------------------------Operators outside the class---------------------------
+
+
+template<typename T, typename U>
+Matrix<T> operator*(U elem, const Matrix<T> & mt)
+{
+	Matrix<T> result(mt);
+
+	return result *= elem;
+}
+
+
+template<typename T>
+Matrix<T> operator+(const Matrix<T> & left, const Matrix<T> & right)
+{
+	if (left.get_n() != right.get_n())
+	{
+		throw std::logic_error("Incorrect size for operator +");
+	}
+
+	Matrix<T> result(left);
+
+	result += right;
+
+	return result;
+}
+
+
+template<typename T>
+Matrix<T> operator-(const Matrix<T> & left, const Matrix<T> & right)
+{
+	if (left.get_n() != right.get_n())
+	{
+		throw std::logic_error("Incorrect size for operator -");
+	}
+
+	return left + (-right);
+}
+
+
+template<typename T>
+Matrix<T> operator-(const Matrix<T> & mt)
+{
+	int n = mt.get_n();
+
+	Matrix<T> result(mt);
+
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++) 
+    	{
+        	result[i][j] = -result[i][j];
+    	}
+	}
+
+	return result;
+}
+
+
+template<typename T>
+Matrix<T> operator*(const Matrix<T> & left, const Matrix<T> & right)
+{
+	if (left.get_n() != right.get_n())
+	{
+		throw std::logic_error("Incorrect size for operator *");
+	}
+
+	Matrix<T> result(left);
+
+	return result *= right;
+}
+
+
 //--------------------------------Friends-------------------------------
 
 
@@ -519,15 +489,7 @@ template<typename T>
 template<typename T>
 std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 {
-	int n;
-	istr >> n;
-
-	if (n < 0)
-	{
-		throw std::logic_error("Wrong matrix size");
-	}
-
-	mt = Matrix<T>(n);
+	int n = mt.n_t;
 
 	for (int i = 0; i < n; i++)
 	{
@@ -544,7 +506,7 @@ std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 template<typename T>
 std::ostream & operator<<(std::ostream & ostr, const Matrix<T> & mt)
 {
-	int n = mt.n_t;
+	int n = mt.get_n();
 
 	for (int i = 0; i < n; i++)
 	{
@@ -559,25 +521,8 @@ std::ostream & operator<<(std::ostream & ostr, const Matrix<T> & mt)
 	return ostr;      
 }
 
+
 //---------------------------------------------------------------------
-
-template<typename T, typename U>
-Matrix<T> operator*(U elem, const Matrix<T> & mt)
-{
-	Matrix<T> result(mt);
-	result *= elem;
-
-	return result;
-}
-
-
-template<typename T, typename U>
-Matrix<T> & operator*=(U elem, const Matrix<T> & mt)
-{
-	return mt *= elem;
-}
-
-
 
 
 #endif
