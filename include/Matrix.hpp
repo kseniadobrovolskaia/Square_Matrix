@@ -1,5 +1,4 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#pragma once
 
 
 #include <iostream>
@@ -11,6 +10,7 @@
 #include <exception>
 #include <string>
 #include <algorithm>
+#include <typeinfo>
 
 
 #define ACCURACY 1e-5
@@ -86,7 +86,7 @@ bool is_zero(const T elem)
 template<typename T>
 Matrix<T>::Matrix(int n): n_t(n)
 {
-	if (n < 0)
+	if (n <= 0)
 	{
 		throw std::logic_error("Wrong matrix size");
 	}
@@ -223,7 +223,7 @@ void Matrix<T>::swap(Matrix<T> & mt)
 
 	for (int i = 0; i < n_t; i++)
 	{
-		std::swap(matrix[i].row, mt.matrix[i].row);
+		std::swap_ranges(matrix[i].row, matrix[i].row + n_t, mt.matrix[i].row);
 	}
 }
 
@@ -312,7 +312,7 @@ Matrix<T> & Matrix<T>::trans()
 template<typename T>
 void Matrix<T>::swap_rows(int n, int k)
 {
-	std::swap(matrix[n].row, matrix[k].row);
+	std::swap_ranges(matrix[n].row, matrix[n].row + n, matrix[k].row);
 }
 
 
@@ -495,10 +495,21 @@ std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 	{
 		for (int j = 0; j < n; j++) 
     	{
-        	istr >> mt[i][j];
+			istr >> mt[i][j];
+
+			if (istr.fail())
+		    {
+		        throw std::logic_error("Invalid input");
+		    }
     	}
 	}
 
+	istr.ignore(2, '\n'); 
+    if (istr.gcount() > 1)
+    {
+        throw std::logic_error("Invalid input ending. Input must end with \\n");
+    }
+  
 	return istr;
 }
 
@@ -525,5 +536,4 @@ std::ostream & operator<<(std::ostream & ostr, const Matrix<T> & mt)
 //---------------------------------------------------------------------
 
 
-#endif
 
