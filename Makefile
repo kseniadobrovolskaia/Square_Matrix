@@ -1,34 +1,19 @@
-Inc_Dir = ./include
-Src_Dir = ./src
+Inc_Dir = .././include
 СXX?= g++
 CXXFLAGS?= -Wall -std=c++2a -g -I $(Inc_Dir)
 
-export Inc_Dir CXX CXXFLAGS
-
-
-.PHONY: all matrix tests
-
-all:
-	$(CXX) $(CXXFLAGS) $(Src_Dir)/main.cpp -o matrix
-	$(CXX) $(CXXFLAGS) $(Src_Dir)/Matrix_Test.cpp -o tests
-
-matrix:
-	$(CXX) $(CXXFLAGS) $(Src_Dir)/main.cpp -o matrix
-	
-
-tests:
-	$(CXX) $(CXXFLAGS) $(Src_Dir)/Matrix_Test.cpp -o tests
+export CXX CXXFLAGS
 
 
 .PHONY: clean
 
+
+subsystem:
+	cd Matrix && $(MAKE)
+	cd Tests && $(MAKE)
+
 clean:
-	rm matrix
-	rm tests
+	cd Matrix && $(MAKE) $@
+	cd Tests && $(MAKE) $@
 
-rm_matrix:
-	rm matrix 
-
-rm_tests:
-	rm tests
 
