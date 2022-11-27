@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MATRIX_H
+#define MATRIX_H
 
 
 #include <iostream>
@@ -48,7 +49,7 @@ public:
 	Row & operator[](int n) { return matrix[n]; }
 
 	int get_n() const { return n_t;};
-	T det() const;
+	T det();
 	Matrix<T> & trans();
 	Matrix<T> & zero();
 	void swap_rows(int n, int k);
@@ -223,15 +224,15 @@ void Matrix<T>::swap(Matrix<T> & mt)
 
 	for (int i = 0; i < n_t; i++)
 	{
-		std::swap_ranges(matrix[i].row, matrix[i].row + n_t, mt.matrix[i].row);
+		std::swap(matrix[i].row, mt.matrix[i].row);
 	}
 }
 
 
 template<typename T>
-T Matrix<T>::det() const
+T Matrix<T>::det()
 {
-	Matrix<T> M = *this;
+	Matrix<T> M(*this);
 	int sign = 1;
 	T znam = 1;
 
@@ -260,16 +261,14 @@ T Matrix<T>::det() const
 					return 0;
 				}
 			}
-			M.swap_rows(n, k);
-					
+			M.swap_rows(n, k);	
 		}
 
 		for (int i = k + 1; i < n_t; i++)
 		{
 			for (int j = k + 1; j < n_t; j++)
-			{
+			{	
 				M[i][j] = (M[i][j]*M[k][k] - M[i][k]*M[k][j]) / znam;
-				
 			}
 		}
 	}
@@ -312,7 +311,7 @@ Matrix<T> & Matrix<T>::trans()
 template<typename T>
 void Matrix<T>::swap_rows(int n, int k)
 {
-	std::swap_ranges(matrix[n].row, matrix[n].row + n, matrix[k].row);
+	std::swap(matrix[n].row, matrix[k].row);
 }
 
 
@@ -535,5 +534,5 @@ std::ostream & operator<<(std::ostream & ostr, const Matrix<T> & mt)
 
 //---------------------------------------------------------------------
 
-
+#endif
 
