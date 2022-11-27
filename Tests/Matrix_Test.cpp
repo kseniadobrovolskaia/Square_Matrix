@@ -11,6 +11,11 @@ int main()
 	int answers[5] = {0};
 
 	data.open("data.txt");
+	if (!(data.is_open()))
+    {
+      std::cerr << "File \"data.txt\" did not open" << std::endl;
+      exit(EXIT_FAILURE);
+    }
 	
 	for (int num_test = 0; num_test < 5; num_test++)
 	{
@@ -48,6 +53,12 @@ void print_in_file(int *answers)
 	std::ofstream results;
 
 	results.open("results.txt");
+
+ 	if (!(results.is_open()))
+    {
+      std::cerr << "File \"results.txt\" did not open" << std::endl;
+      exit(EXIT_FAILURE);
+    }
 
 	for (int num_test = 0; num_test < 5; num_test++)
 	{

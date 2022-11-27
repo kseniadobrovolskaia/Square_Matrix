@@ -6,8 +6,8 @@
 
 enum name
 {
-  answers,
-  results,  
+  answers = 0,
+  results = 1,  
 };
 
 
@@ -61,6 +61,18 @@ int read_file(name file, int elem)
 
   if (flag == 0)
   {
+    if (!(fans.is_open()))
+    {
+      std::cerr << "File \"answers.txt\" did not open" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    if (!(fres.is_open()))
+    {
+      std::cerr << "File \"results.txt\" did not open" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
     flag++;
     for (int i = 0; i < 5; i++)
     {
