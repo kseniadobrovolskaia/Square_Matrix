@@ -35,8 +35,11 @@ public:
 	friend class Matrix<T>;
 
 	explicit Memory(int n = 0);
+
 	Memory(const Memory<T> & mt);
 	Memory<T> & operator=(const Memory<T> & mt);
+	Memory(Memory<T> && mt): n_t(mt.n_t), matrix(mt.matrix) { mt.matrix = nullptr; };
+	Memory<T> & operator=(Memory<T> && mt);
 	virtual ~Memory() noexcept;
 
 	Row operator[](int n) const { return matrix[n]; }
@@ -151,6 +154,19 @@ Memory<T> & Memory<T>::operator=(const Memory<T> & mt)
 	Memory<T> m_tmp(mt);
 
 	swap(m_tmp);
+
+	return *this;
+}
+
+
+template<typename T>
+Memory<T> & Memory<T>::operator=(Memory<T> && mt)
+{
+
+	Memory<T> m_tmp(mt);
+
+	swap(m_tmp);
+	mt.matrix = nullptr;
 
 	return *this;
 }

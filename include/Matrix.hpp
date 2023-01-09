@@ -22,8 +22,11 @@ class Matrix
 public:
 
 	explicit Matrix(int n = 0): n_t(n), matrix(n){};
+
 	Matrix(const Matrix<T> & mt): n_t(mt.n_t), matrix(mt.matrix){};
 	Matrix<T> & operator=(const Matrix<T> & mt);
+	Matrix(Matrix<T> && mt): n_t(mt.n_t), matrix(mt.matrix){ ~mt.matrix(); };
+	Matrix<T> & operator=(Matrix<T> && mt);
 	virtual ~Matrix() noexcept {};
 
 	Memory<T>::Row operator[](int n) const { return matrix[n]; };
@@ -76,6 +79,22 @@ Matrix<T> & Matrix<T>::operator=(const Matrix<T> & mt)
 	matrix = mt.matrix;
 
 	return *this;
+}
+
+
+template<typename T>
+Matrix<T> & Matrix<T>::operator=(Matrix<T> && mt)
+{
+	if (n_t != mt.n_t)
+	{
+		throw std::logic_error("You cannot use operator = for matrices of different sizes");
+	}
+
+	matrix = mt.matrix;
+	~mt.matrix(); 
+
+	return *this;
+
 }
 
 
@@ -150,11 +169,10 @@ T Matrix<T>::det()
 template<typename T>
 Matrix<T> & Matrix<T>::zero()
 {
-	T zero[n_t] = {0};
 
 	for (int i = 0; i < n_t; i++)
 	{
-		std::copy(zero, zero + n_t, matrix[i].row);
+		std::fill(matrix[i].row, matrix[i].row + n_t, 0);
 	}
 
 	return *this;
