@@ -381,7 +381,7 @@ std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 	{
 		for (int j = 0; j < n; j++) 
     	{
-    		std::cin >> std::ws;
+    		istr >> std::ws;
 
 			istr >> mt[i][j];
 			istr >> space;
@@ -391,6 +391,15 @@ std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 		        throw std::logic_error("Invalid input");
 		    }
     	}
+	}
+
+	while (space != '\n')
+	{
+		if (!isspace(space))
+		{
+			throw std::logic_error("Invalid input");
+		}
+		istr >> space;
 	}
 
 	return istr;

@@ -1,37 +1,45 @@
 #include "Matrix.hpp"
 
 
-void print_in_file(int *answers);
+void print_in_file(int *answers, int num_file);
 
 
 int main()
 {
-	std::ifstream data;
+	std::ifstream det_data, input_data;
 
-	int answers[5] = {0};
+	int det_answers[5] = {0}, input_answers[5] = {0};
 
-	data.open("data.txt");
-	if (!(data.is_open()))
-    {
-      std::cerr << "File \"data.txt\" did not open" << std::endl;
-      exit(EXIT_FAILURE);
-    }
+	det_data.open("det_data.txt");
+	if (!(det_data.is_open()))
+  {
+    std::cerr << "File \"det_data.txt\" did not open" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 	
 	for (int num_test = 0; num_test < 5; num_test++)
 	{
 		try
 		{
 			int n; 
+			char space;
 
-			data >> n;
+			det_data >> std::noskipws;
+			det_data >> n;
+			det_data >> space;
+
+			if (!std::isspace(space) || std::cin.fail())
+			{
+				throw std::logic_error("Invalid input");
+			}
 
 			Matrix<int> m(n);
 			
-			data >> m;
+			det_data >> m;
 
-			answers[num_test] = m.det();
+			det_answers[num_test] = m.det();
 
-			std::cout << "Determinant of the " << num_test + 1 << " matrix: " << answers[num_test] << std::endl;
+			std::cout << "Determinant of the " << num_test + 1 << " matrix: " << det_answers[num_test] << std::endl;
 		}
 		catch(std::exception & ex)
 		{
@@ -40,25 +48,87 @@ int main()
 		}
 	}
 
-	data.close();
-	
-	print_in_file(answers);
+	print_in_file(det_answers, 0);
 
+	det_data.close();
+
+	input_data.open("input_data.txt");
+	if (!(input_data.is_open()))
+  {
+    std::cerr << "File \"input_data.txt\" did not open" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+	for (int num_test = 0; num_test < 5; num_test++)
+	{
+		try
+		{
+			int n; 
+			char space;
+
+			input_data >> std::noskipws;
+			input_data >> n;
+			input_data >> space;
+
+			if (!std::isspace(space) || std::cin.fail())
+			{
+				throw std::logic_error("Invalid input");
+			}
+
+			Matrix<int> m(n);
+			
+			input_data >> m;
+
+			input_answers[num_test] = 1;
+			
+		}
+		catch(std::exception & ex)
+		{
+			input_answers[num_test] = 0;
+			char elem;
+			input_data >> elem;
+			while (elem != '\n')
+			{
+				input_data >> elem;
+			}
+		}
+
+		std::cout << "Correct input in " << num_test + 1 << " test: " << input_answers[num_test] << std::endl;
+	}
+
+	print_in_file(input_answers, 1);
+
+	input_data.close();
+	
 	return 0;
 }
 
 
-void print_in_file(int *answers)
+void print_in_file(int *answers, int num_file)
 {
 	std::ofstream results;
 
-	results.open("results.txt");
+	if (num_file == 0)
+	{
+		results.open("det_results.txt");
 
- 	if (!(results.is_open()))
-    {
-      std::cerr << "File \"results.txt\" did not open" << std::endl;
-      exit(EXIT_FAILURE);
-    }
+		if (!(results.is_open()))
+		{
+		  std::cerr << "File \"det_results.txt\" did not open" << std::endl;
+		  exit(EXIT_FAILURE);
+		}
+	}
+	else
+	{
+		results.open("input_results.txt");
+
+		if (!(results.is_open()))
+		{
+		  std::cerr << "File \"input_results.txt\" did not open" << std::endl;
+		  exit(EXIT_FAILURE);
+		}
+
+	}
 
 	for (int num_test = 0; num_test < 5; num_test++)
 	{
