@@ -6,10 +6,12 @@ int main()
 	try
 	{
 		int n;
+		char space;
+		std::cin >> std::noskipws;
 
 		std::cin >> n;
-
-		if (std::cin.fail())
+		std::cin >> space;
+		if (!std::isspace(space) || std::cin.fail())
 		{
 			throw std::logic_error("Invalid input");
 		}

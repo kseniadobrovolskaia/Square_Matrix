@@ -12,6 +12,7 @@
 #include <string>
 #include <algorithm>
 #include <typeinfo>
+#include <cstring>
 
 
 template<typename T>

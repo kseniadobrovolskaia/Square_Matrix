@@ -371,31 +371,28 @@ Matrix<T> operator*(const Matrix<T> & left, const Matrix<T> & right)
 //--------------------------------Friends-------------------------------
 
 
-
 template<typename T>
 std::istream & operator>>(std::istream & istr, Matrix<T> & mt)
 {
 	int n = mt.n_t;
+	char space;
 
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++) 
     	{
-			istr >> mt[i][j];
+    		std::cin >> std::ws;
 
-			if (istr.fail())
+			istr >> mt[i][j];
+			istr >> space;
+
+			if (!std::isspace(space) || istr.fail())
 		    {
 		        throw std::logic_error("Invalid input");
 		    }
     	}
 	}
 
-	istr.ignore(2, '\n'); 
-    if (istr.gcount() > 1)
-    {
-        throw std::logic_error("Invalid input ending. Input must end with \\n");
-    }
-  
 	return istr;
 }
 
