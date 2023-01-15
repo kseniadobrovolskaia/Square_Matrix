@@ -168,6 +168,7 @@ Memory<T> & Memory<T>::operator=(Memory<T> && mt)
 
 	swap(m_tmp);
 	mt.matrix = nullptr;
+	mt.n_t = 0;
 
 	return *this;
 }

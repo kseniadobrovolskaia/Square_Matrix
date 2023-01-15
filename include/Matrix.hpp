@@ -25,7 +25,7 @@ public:
 
 	Matrix(const Matrix<T> & mt): n_t(mt.n_t), matrix(mt.matrix){};
 	Matrix<T> & operator=(const Matrix<T> & mt);
-	Matrix(Matrix<T> && mt): n_t(mt.n_t), matrix(mt.matrix){ ~mt.matrix(); };
+	Matrix(Matrix<T> && mt): n_t(mt.n_t), matrix(mt.matrix){ ~mt.matrix(); n_t = 0; };
 	Matrix<T> & operator=(Matrix<T> && mt);
 	virtual ~Matrix() noexcept {};
 
@@ -92,6 +92,7 @@ Matrix<T> & Matrix<T>::operator=(Matrix<T> && mt)
 
 	matrix = mt.matrix;
 	~mt.matrix(); 
+	mt.n_t = 0;
 
 	return *this;
 
