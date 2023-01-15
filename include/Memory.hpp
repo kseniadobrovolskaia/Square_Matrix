@@ -39,7 +39,7 @@ public:
 
 	Memory(const Memory<T> & mt);
 	Memory<T> & operator=(const Memory<T> & mt);
-	Memory(Memory<T> && mt): n_t(mt.n_t), matrix(mt.matrix) { mt.matrix = nullptr; };
+	Memory(Memory<T> && mt): n_t(mt.n_t), matrix(mt.matrix) { mt.matrix = nullptr; mt.n_t = 0; };
 	Memory<T> & operator=(Memory<T> && mt);
 	virtual ~Memory() noexcept;
 

@@ -182,17 +182,15 @@ Matrix<T> & Matrix<T>::zero()
 template<typename T>
 Matrix<T> & Matrix<T>::trans()
 {
-	Matrix<T> result(n_t);
-
 	for (int i = 0; i < n_t; i++)
 	{
-		for (int j = 0; j < n_t; j++)
+		for (int j = 0; j < i; j++)
 		{
-			result[j][i] = (*this)[i][j];
+			std::swap(matrix[i][j], matrix[j][i]);
 		}
 	}
 
-	return *this = result;
+	return *this;
 }
 
 
